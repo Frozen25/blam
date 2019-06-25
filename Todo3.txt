@@ -1,0 +1,66 @@
+Fix del update:
+	<ros/ros.h>
+	en geometry ejecutar: patch -p1 < geometry_utils.patch.txt
+
+
+
+
+FIX 1 
+--------------------------------------------------------------
+
+PointCloudMapper.cc
+change
+
+if (!map_octree_->isVoxelOccupiedAtPoint(p)) {
+
+to:
+
+double min_x, min_y, min_z, max_x, max_y, max_z;
+map_octree_->getBoundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
+bool isInBox = (p.x >= min_x && p.x <= max_x) && (p.y >= min_y && p.y <= max_y) && (p.z >= min_z && p.z <= max_z);
+
+if (!isInBox || !map_octree_->isVoxelOccupiedAtPoint(p)) {
+
+--------------------------------------------------------------
+FIX 2
+
+
+--------------------------------------------------------------
+
+
+I have solved the problem
+
+Probably because your point cloud data contains"is_dense:false",It means that your point cloud data contains nan
+
+my solution is edit the “point_cloud_filter.cc”， add the following code at the end of the Filter function
+
+if (!points->is_dense)
+{
+points_filtered->is_dense = false;
+std::vector indices;
+pcl::removeNaNFromPointCloud(*points_filtered,*points_filtered, indices);
+}
+
+
+--------------------------------------------------------------
+
+ejecutar:
+agregar los repositorios al src del catkin
+ejecutar:
+    rosdep install --from-paths src --ignore-src -r -y
+    catkin_make
+    source devel/setup.bash
+
+terminal 1    
+ejecutar roscore
+
+terminal 2
+ejecutar roslauch XXXXXX
+
+
+??
+rosbag para capturar datos
+
+
+ip: 192.168.1.222
+subnest: 255.255.255.0
