@@ -2,29 +2,31 @@ Fix del update:
 	<ros/ros.h>
 	en geometry ejecutar: patch -p1 < geometry_utils.patch.txt
 
+https://github.com/erik-nelson/blam/issues/34
 
-
+--------------------------------------------------------------
 
 FIX 1 
+https://github.com/erik-nelson/blam/issues/36
 --------------------------------------------------------------
 
 PointCloudMapper.cc
 change
 
-if (!map_octree_->isVoxelOccupiedAtPoint(p)) {
+	if (!map_octree_->isVoxelOccupiedAtPoint(p)) {
 
 to:
 
-double min_x, min_y, min_z, max_x, max_y, max_z;
-map_octree_->getBoundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
-bool isInBox = (p.x >= min_x && p.x <= max_x) && (p.y >= min_y && p.y <= max_y) && (p.z >= min_z && p.z <= max_z);
+	double min_x, min_y, min_z,	 max_x, max_y, max_z;
+	map_octree_->getBoundingBox(min_x, min_y, min_z, max_x, max_y, max_z);
+	bool isInBox = (p.x >= min_x && p.x <= max_x) && (p.y >= min_y && p.y <= max_y) && (p.z >= min_z && p.z <= max_z);
 
-if (!isInBox || !map_octree_->isVoxelOccupiedAtPoint(p)) {
+	if (!isInBox || !map_octree_->isVoxelOccupiedAtPoint(p)) {
 
 --------------------------------------------------------------
+
 FIX 2
-
-
+https://github.com/erik-nelson/blam/issues/26
 --------------------------------------------------------------
 
 
@@ -34,8 +36,7 @@ Probably because your point cloud data contains"is_dense:false",It means that yo
 
 my solution is edit the “point_cloud_filter.cc”， add the following code at the end of the Filter function
 
-if (!points->is_dense)
-{
+if (!points->is_dense){
 points_filtered->is_dense = false;
 std::vector indices;
 pcl::removeNaNFromPointCloud(*points_filtered,*points_filtered, indices);
@@ -58,9 +59,51 @@ terminal 2
 ejecutar roslauch XXXXXX
 
 
-??
+para ver los que estan corriendo:
+rosnode list
+
+
 rosbag para capturar datos
+mkdir ~/bagfiles
+cd ~/bagfiles
+rosbag record -a
+
+--------------------------------------------------------------
+rVIZ:
+export velopoints
+
+http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
 
 
+roslaunch velodyne_pointcloud VLP16_points.launch
+
+
+
+
+
+--------------------------------------------------------------
 ip: 192.168.1.222
 subnest: 255.255.255.0
+
+
+
+
+
+interconxion con gps
+	convercion de tiempo
+	conversion de espacio georeferencia
+como hacer dumps
+	buscar la conversion de tiempo y frames
+	el angulo
+	iniciar y terminar la captura desde la terminal 
+	// hardware ethernet: enp7s0
+	start
+		sudo tcpdump -w prueba.pcap -i enp7s0
+	end
+		ctrl+c
+exportar
+	abrir el dump
+	pasar a zip
+leer las hoja de datos
+leer las referencias
+

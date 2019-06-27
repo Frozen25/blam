@@ -38,5 +38,8 @@ internal/src
 *.MOV
 *.mov
 
+# VSCode
+.vscode*
+
 # CSV files
 *.csv
