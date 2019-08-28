@@ -1,14 +1,83 @@
-Fix del update:
-	<ros/ros.h>
-	en geometry ejecutar: patch -p1 < geometry_utils.patch.txt
+--------------------------------------------------------------
+Intalación:
+
+
+GTSAM:
+	sudo apt-get install libboost-all-dev
+	sudo apt-get install cmake
+	cd ~
+	git clone https://github.com/borglab/gtsam
+	cd gtsam
+	mkdir build
+	cd build
+	cmake ..
+	#make check #(optional, runs unit tests)
+	make install
+
+
+ROSinstall:
+	sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list'
+	sudo apt-key adv --keyserver 'hkp://keyserver.ubuntu.com:80' --recv-key C1CF6E31E6BADE8868B172B4F42ED6FBAB17C654
+	sudo apt update
+	sudo apt install ros-melodic-desktop-full
+	sudo rosdep init
+	rosdep update
+	echo "source /opt/ros/melodic/setup.bash" >> ~/.bashrc
+	source ~/.bashrc
+	#source /opt/ros/melodic/setup.bash
+	sudo apt install python-rosinstall python-rosinstall-generator python-wstool build-essential
+
+
+ROSconfig:
+	printenv | grep ROS
+	source /opt/ros/melodic/setup.bash
+	mkdir -p ~/catkin_ws/src
+	cd ~/catkin_ws/
+	catkin_make
+	source devel/setup.bash
+	echo $ROS_PACKAGE_PATH
+	cd ~/catkin_ws/src
+	catkin_create_pkg beginner_tutorials std_msgs rospy roscpp
+	cd ~/catkin_ws
+	catkin_make
+	. ~/catkin_ws/devel/setup.bash
+
+
+--------------------------------------------------------------
+Ejecución:
+
+./update
+
+To run in online mode (e.g. by replaying a bag file from another terminal or
+using a real-time sensor stream), use
+
+roslaunch blam_example test_online.launch
+
+To run in offline mode, i.e. by loading a bagfile and processing its data as
+fast as possible, set the bagfile name and scan topic in
+`blam_example/launch/test_offline.launch`, and use
+
+
+roslaunch blam_example test_offline.launch
+
+
+
+--------------------------------------------------------------
+
+FIX 1
+
+Fix del update:  	<ros/ros.h>
+copiar a la carpeta geomery_utils el archivo: geometry_utils.patch.txt
+	en geometry ejecutar: 
+		patch -p1 < geometry_utils.patch.txt
 
 https://github.com/erik-nelson/blam/issues/34
 
 --------------------------------------------------------------
 
-FIX 1 
+FIX 2 
 https://github.com/erik-nelson/blam/issues/36
---------------------------------------------------------------
+
 
 PointCloudMapper.cc
 change
@@ -25,9 +94,8 @@ to:
 
 --------------------------------------------------------------
 
-FIX 2
+FIX 3
 https://github.com/erik-nelson/blam/issues/26
---------------------------------------------------------------
 
 
 I have solved the problem
@@ -45,7 +113,7 @@ pcl::removeNaNFromPointCloud(*points_filtered,*points_filtered, indices);
 
 --------------------------------------------------------------
 
-ejecutar:
+Para ejecutar:
 agregar los repositorios al src del catkin
 ejecutar:
     rosdep install --from-paths src --ignore-src -r -y
