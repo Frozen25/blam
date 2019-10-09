@@ -1,12 +1,14 @@
 --------------------------------------------------------------
-Intalación:
+Instalación:
 
 
 GTSAM:
 	sudo apt-get install libboost-all-dev
 	sudo apt-get install cmake
+	sudo apt-get install libtbb-dev
 	cd ~
-	git clone https://github.com/borglab/gtsam
+	#git clone https://github.com/borglab/gtsam
+	#descargar la version 4.0 en lugar de la última version	
 	cd gtsam
 	mkdir build
 	cd build
@@ -42,11 +44,53 @@ ROSconfig:
 	catkin_make
 	. ~/catkin_ws/devel/setup.bash
 
+Velodyine en ROS:
+	http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
+
+
+--------------------------------------------------------------
+Para visualizar se puede utilizar rVIZ
+Primero se debe conectar velodyine con ros siguiendo el tutorial en el siguiente link:
+http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
+
+rVIZ:
+export velopoints
+
+
+
+
+roslaunch velodyne_pointcloud VLP16_points.launch
+
+Para configurar el Lidar:
+http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
+
+ip: 192.168.1.222 (cualquier IP menos 192.168.1.201)
+subnest: 255.255.255.0
+
+
+
+--------------------------------------------------------------
+
+como hacer dumps:
+	iniciar y terminar la captura desde la terminal 
+	// hardware ethernet: enp7s0  // para obtener el hardware, ejecutar:
+		ifconfig
+
+	start
+		sudo tcpdump -w prueba.pcap -i enp7s0
+	end
+		ctrl+c
+exportar
+	abrir el dump
+	pasar a zip
+leer las hoja de datos
+leer las referencias
+
 
 --------------------------------------------------------------
 Ejecución:
 
-./update
+./update  #para descargar y compilar todas las bibliotecas inicialmente
 
 To run in online mode (e.g. by replaying a bag file from another terminal or
 using a real-time sensor stream), use
@@ -61,14 +105,29 @@ fast as possible, set the bagfile name and scan topic in
 roslaunch blam_example test_offline.launch
 
 
+También se puede reproducir un archivo de bolsa .bag para emular los datos 
+de entrada del Lidar, permitiendo ejecución online mientras se reproduce la bolsa
 
+
+
+--------------------------------------------------------------
+Para poder ejecutar el programa se deben arreglar distintos conflictos
+
+Muchas de las soluciones son tomadas de: https://github.com/erik-nelson/blam/issues/
+
+Pero también está esta guia paso a paso con las soluciones
+https://blog.csdn.net/xmy306538517/article/details/81122663
+
+A continuación se muestran paso a paso la solución de varios conflictos:
 --------------------------------------------------------------
 
 FIX 1
 
 Fix del update:  	<ros/ros.h>
 copiar a la carpeta geomery_utils el archivo: geometry_utils.patch.txt
-	en geometry ejecutar: 
+	en en la carpeta 
+		internal/src/geometry_utils 
+	ejecutar en terminal: 
 		patch -p1 < geometry_utils.patch.txt
 
 https://github.com/erik-nelson/blam/issues/34
@@ -78,8 +137,9 @@ https://github.com/erik-nelson/blam/issues/34
 FIX 2 
 https://github.com/erik-nelson/blam/issues/36
 
+en el archivo:
+	internal/src/point_cloud_mapper/src/PointCloudMapper.cc
 
-PointCloudMapper.cc
 change
 
 	if (!map_octree_->isVoxelOccupiedAtPoint(p)) {
@@ -97,12 +157,17 @@ to:
 FIX 3
 https://github.com/erik-nelson/blam/issues/26
 
+En el archivo:
+	internal/src/point_cloud_filter/src/PointCloudFilter.cc
+
+Se debe inicializar el vector de indices de tipo entero con: 
+	std::vector<int> indices;
+
 
 I have solved the problem
-
 Probably because your point cloud data contains"is_dense:false",It means that your point cloud data contains nan
-
 my solution is edit the “point_cloud_filter.cc”， add the following code at the end of the Filter function
+
 
 if (!points->is_dense){
 points_filtered->is_dense = false;
@@ -114,16 +179,16 @@ pcl::removeNaNFromPointCloud(*points_filtered,*points_filtered, indices);
 --------------------------------------------------------------
 
 Para ejecutar:
-agregar los repositorios al src del catkin
-ejecutar:
-    rosdep install --from-paths src --ignore-src -r -y
+agregar el repositorio al src del catkin
+ejecutar en ~/catkin_workspace
+    #rosdep install --from-paths src --ignore-src -r -y
     catkin_make
     source devel/setup.bash
 
-terminal 1    
+terminal 1    inicializar ros
 ejecutar roscore
 
-terminal 2
+terminal 2		ejecutar el programa
 ejecutar roslauch XXXXXX
 
 
@@ -131,47 +196,7 @@ para ver los que estan corriendo:
 rosnode list
 
 
-rosbag para capturar datos
+para capturar datos en una bolsa (rosbag):
 mkdir ~/bagfiles
 cd ~/bagfiles
 rosbag record -a
-
---------------------------------------------------------------
-rVIZ:
-export velopoints
-
-http://wiki.ros.org/velodyne/Tutorials/Getting%20Started%20with%20the%20Velodyne%20VLP16
-
-
-roslaunch velodyne_pointcloud VLP16_points.launch
-
-
-
-
-
---------------------------------------------------------------
-ip: 192.168.1.222
-subnest: 255.255.255.0
-
-
-
-
-
-interconxion con gps
-	convercion de tiempo
-	conversion de espacio georeferencia
-como hacer dumps
-	buscar la conversion de tiempo y frames
-	el angulo
-	iniciar y terminar la captura desde la terminal 
-	// hardware ethernet: enp7s0
-	start
-		sudo tcpdump -w prueba.pcap -i enp7s0
-	end
-		ctrl+c
-exportar
-	abrir el dump
-	pasar a zip
-leer las hoja de datos
-leer las referencias
-
